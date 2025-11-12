@@ -1,38 +1,43 @@
-// BARU: Impor useCallback dan useMemo
+// BARU: Impor useCallback, useMemo, dan kembalikan XLSX
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-// Hapus XLSX, sudah tidak diperlukan
-// import * as XLSX from 'xlsx'; 
+import * as XLSX from 'xlsx'; // DIKEMBALIKAN: Impor library xlsx
 import './App.css'; 
 
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfF9o5t1rOT0NQWce79OryRc9rOwhqHLmiCN0ASFxL5c-EY1JvJeT6LWeAV7TgcZ0/exec";
 
 function App() {
-  // BARU: masterList adalah satu-satunya sumber kartu
+  // --- STATE ---
+  // masterList adalah satu-satunya sumber kartu
   const [masterList, setMasterList] = useState([]);
   
-  // BARU: Kita hanya melacak kartu yang SUDAH DITARIK
+  // Kita hanya melacak kartu yang SUDAH DITARIK
   const [drawnCards, setDrawnCards] = useState([]);
   
-  const [currentCard, setCurrentCard] = useState(null); // (Mengganti drawnCard)
+  // BARU: State untuk input manual
+  const [newCard, setNewCard] = useState(''); 
+
+  const [currentCard, setCurrentCard] = useState(null); 
   const [isShuffling, setIsShuffling] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // BARU: Dek yang tersedia sekarang adalah data turunan (derived state)
-  // Ini adalah kartu di masterList YANG BELUM ada di drawnCards
+  // --- DERIVED STATE ---
+  // Dek yang tersedia (kartu di masterList TAPI TIDAK ADA di drawnCards)
   const availableCards = useMemo(() => {
     return masterList.filter(card => !drawnCards.includes(card));
   }, [masterList, drawnCards]);
 
-  // FUNGSI 1: fetchCards sekarang JAUH lebih sederhana
-  // Hanya mengambil data dan mengatur masterList.
+  // --- FUNGSI ---
+
+  // FUNGSI 1: Fetch dari Google Sheet (Hard Reset)
   const fetchCards = useCallback(() => {
     setIsLoading(true);
     fetch(GOOGLE_SCRIPT_URL)
       .then(res => res.json())
       .then(data => {
         if (data.status === "success") {
-          setMasterList(data.cards); // Langsung set master list
+          setMasterList(data.cards); // Set master list
+          setDrawnCards([]); // Reset kartu yang ditarik
         } else {
           alert('Gagal mengambil data dari Google Sheet.');
         }
@@ -43,32 +48,67 @@ function App() {
         alert('Terjadi error saat menyambung ke Google Sheet.');
         setIsLoading(false);
       });
-  }, []); // Tetap kosong, fungsi ini tidak perlu dependensi
+  }, []); 
 
-  // EFEK: (Tidak berubah)
+  // EFEK: Jalankan fetchCards() sekali saat load
   useEffect(() => {
     fetchCards();
   }, [fetchCards]);
 
-  // HAPUS FUNGSI 2 (handleAddCard) dan FUNGSI 3 (handleFileUpload)
-  // Kita tidak lagi mengizinkan input manual/excel
+  // FUNGSI 2: Tambah manual (DIKEMBALIKAN & DIUBAH)
+  const handleAddCard = (e) => {
+    e.preventDefault(); 
+    if (newCard.trim() !== '') {
+      // Tambahkan kartu baru ke MASTER LIST
+      setMasterList(prevMaster => [...prevMaster, newCard]);
+      setNewCard(''); 
+    }
+  };
 
-  // FUNGSI 4: Logika Ambil Kartu (diubah)
+  // FUNGSI 3: Upload Excel (DIKEMBALIKAN & DIUBAH)
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const bstr = evt.target.result;
+      const wb = XLSX.read(bstr, { type: 'binary' });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws);
+
+      if (data.length === 0) { 
+        alert("File Excel kosong atau formatnya salah!");
+        return; 
+      }
+      
+      const headerKey = Object.keys(data[0])[0];
+      const importedCards = data.map(row => row[headerKey]);
+      
+      // Upload Excel adalah Hard Reset
+      setMasterList(importedCards); // Ganti master list
+      setDrawnCards([]); // Kosongkan kartu yang sudah ditarik
+      
+      alert(`Berhasil mengimpor ${importedCards.length} kartu!`);
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  // FUNGSI 4: Ambil Kartu (Logika dari Kode B, sudah benar)
   const handleDrawCard = () => {
-    // Kita cek dari availableCards
     if (availableCards.length === 0) {
       alert('Kartu sudah habis!');
       return;
     }
     setIsShuffling(true);
     setTimeout(() => {
-      // Ambil kartu acak dari dek yang TERSEDIA
       const randomIndex = Math.floor(Math.random() * availableCards.length);
       const selectedCard = availableCards[randomIndex];
       
       setCurrentCard(selectedCard); // Set kartu untuk popup
       
-      // BARU: Tambahkan kartu ini ke daftar yang sudah ditarik
+      // Tambahkan kartu ini ke daftar yang sudah ditarik
       setDrawnCards(prevDrawn => [...prevDrawn, selectedCard]);
       
       setIsShuffling(false);
@@ -82,7 +122,7 @@ function App() {
     setTimeout(() => setCurrentCard(null), 300);
   };
 
-  // Tampilan JSX (disederhanakan)
+  // --- TAMPILAN JSX (Gabungan) ---
   return (
     <div className="App">
       <div className="container">
@@ -94,20 +134,39 @@ function App() {
           <p className="loading-text">Memuat kartu dari GSheet...</p>
         ) : (
           <>
-            {/* DIUBAH: Menampilkan jumlah kartu yang tersedia */}
             <p className="card-count">Tersisa {availableCards.length} kartu di dek.</p>
             <button onClick={fetchCards} className="refresh-button">
-              Refresh Kartu (dari GSheet)
+              Reset Kartu (dari GSheet)
             </button>
           </>
         )}
         
-        {/* HAPUS: Bagian Excel dan Tambah Manual */}
-        {/* <div className="import-section"> ... </div> */}
-        {/* <form ... </form> */}
+        {/* DIKEMBALIKAN: Bagian Excel */}
+        <div className="import-section">
+          <label htmlFor="file-upload">Ganti dek dengan Excel (.xlsx):</label>
+          <input
+            id="file-upload"
+            type="file"
+            accept=".xlsx, .xls"
+            onChange={handleFileUpload}
+          />
+        </div>
 
+        <p className='atau'>atau tambahkan satu per satu ke dek:</p>
+        
+        {/* DIKEMBALIKAN: Bagian Manual */}
+        <form onSubmit={handleAddCard} className="input-form">
+          <input
+            type="text"
+            value={newCard}
+            onChange={(e) => setNewCard(e.target.value)}
+            placeholder="Masukkan keterangan kartu..."
+          />
+          <button type="submit">Tambah Kartu</button>
+        </form>
+
+        {/* Dek dan Tombol (Logika dari Kode B) */}
         <div className="deck-container">
-          {/* DIUBAH: Cek 'availableCards.length' untuk 'empty' */}
           <div className={`deck ${isShuffling ? 'shuffling' : ''} ${availableCards.length === 0 ? 'empty' : ''}`}>
             <div className="card-placeholder"></div>
             <div className="card-placeholder"></div>
@@ -116,7 +175,6 @@ function App() {
           
           <button 
             onClick={handleDrawCard} 
-            // DIUBAH: Cek 'availableCards.length'
             disabled={isShuffling || availableCards.length === 0 || isLoading}
             className="draw-button"
           >
@@ -125,13 +183,12 @@ function App() {
         </div>
       </div>
 
-      {/* Popup Modal (diubah sedikit) */}
+      {/* Popup Modal (Logika dari Kode B) */}
       {showPopup && (
         <div className="popup-overlay" onClick={closePopup}>
           <div className="popup-content" onClick={(e) => e.stopPropagation()}>
             <button className="close-popup" onClick={closePopup}>&times;</button>
             <h2>Kartu Terpilih:</h2>
-            {/* Menampilkan 'currentCard' */}
             <p className="drawn-card-text">{currentCard}</p>
           </div>
         </div>
