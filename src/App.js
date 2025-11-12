@@ -29,7 +29,7 @@ function App() {
 
   // --- FUNGSI ---
 
-  // FUNGSI 1: Fetch dari Google Sheet (Hard Reset)
+  // FUNGSI 1: Fetch dari Google Sheet (Smart Refresh)
   const fetchCards = useCallback(() => {
     setIsLoading(true);
     fetch(GOOGLE_SCRIPT_URL)
@@ -37,7 +37,7 @@ function App() {
       .then(data => {
         if (data.status === "success") {
           setMasterList(data.cards); // Set master list
-          setDrawnCards([]); // Reset kartu yang ditarik
+          // setDrawnCards([]); // <-- BARIS INI DIHAPUS
         } else {
           alert('Gagal mengambil data dari Google Sheet.');
         }
@@ -66,6 +66,7 @@ function App() {
   };
 
   // FUNGSI 3: Upload Excel (DIKEMBALIKAN & DIUBAH)
+  // (Logika ini tetap Hard Reset, sesuai label tombolnya "Ganti dek")
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -135,8 +136,9 @@ function App() {
         ) : (
           <>
             <p className="card-count">Tersisa {availableCards.length} kartu di dek.</p>
+            {/* Ganti teks tombolnya agar sesuai logika baru */}
             <button onClick={fetchCards} className="refresh-button">
-              Reset Kartu (dari GSheet)
+              Cek Kartu Baru (dari GSheet)
             </button>
           </>
         )}
