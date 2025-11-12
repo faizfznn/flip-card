@@ -276,3 +276,30 @@ h1 {
   font-weight: 700;
   margin-top: 20px;
 }
+
+/* --- Tambahan untuk GSheet --- */
+.loading-text {
+  font-weight: 700;
+  color: var(--primary-orange);
+  font-size: 1.1rem;
+  padding: 20px 0;
+}
+
+.refresh-button {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: #f0f0f0;
+  color: #555;
+  cursor: pointer;
+  margin-top: -10px;
+  margin-bottom: 20px;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #e0e0e0;
+}
