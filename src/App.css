@@ -1,38 +1,278 @@
+/* Variabel Warna (Design System BEM) */
+:root {
+  /* Warna diambil dari palet logo BEM */
+  --primary-red: #D94452;
+  --primary-orange: #F39C12;
+  --primary-yellow: #F7D851;
+  --dark-text: #333333;
+  /* Latar belakang terinspirasi dari tekstur di gambar */
+  --light-bg: #FDF8E1; 
+}
+
+/* Reset dan Font Dasar */
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--light-bg);
+  color: var(--dark-text);
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
 .App {
   text-align: center;
+  width: 100%;
+  max-width: 500px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.container {
+  background-color: #ffffff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.logo {
+  width: 80px;
+  margin-bottom: 20px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+h1 {
+  color: var(--primary-red);
+  font-weight: 700;
+  margin-top: 0;
+}
+
+.card-count {
+  font-size: 0.9rem;
+  color: #888;
+  margin-top: -10px;
+}
+
+/* Form Input */
+.input-form {
+  margin: 25px 0;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
+  gap: 10px;
+}
+
+.input-form input {
+  flex-grow: 1;
+  padding: 12px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+}
+
+.input-form input:focus {
+  border-color: var(--primary-orange);
+  outline: none;
+}
+
+/* Tombol (Gaya BEM) */
+.input-form button, .draw-button {
+  padding: 12px 18px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  /* Gradient warna logo BEM */
+  background-image: linear-gradient(to right, var(--primary-red), var(--primary-orange));
   color: white;
+  transition: transform 0.2s, box-shadow 0.2s;
+  flex-shrink: 0;
 }
 
-.App-link {
-  color: #61dafb;
+.input-form button:hover, .draw-button:hover {
+  transform: scale(1.03);
+  box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.draw-button {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.draw-button:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Dek Kartu dan Animasi Shuffle */
+.deck-container {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 10px;
+}
+
+.deck {
+  position: relative;
+  width: 120px;
+  height: 180px;
+  margin: 20px auto;
+  transition: opacity 0.3s;
+}
+
+/* Tumpukan kartu palsu untuk visual */
+.card-placeholder {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  border: 2px solid var(--dark-text);
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  /* Beri sedikit rotasi agar terlihat menumpuk */
+}
+
+.card-placeholder:nth-child(1) { transform: rotate(-5deg); }
+.card-placeholder:nth-child(2) { transform: rotate(3deg); }
+.card-placeholder:nth-child(3) { transform: rotate(-2deg); }
+
+/* Jika kartu habis, dek menghilang */
+.deck.empty {
+  opacity: 0.3;
+}
+
+/* Animasi Shuffle */
+.deck.shuffling .card-placeholder:nth-child(1) { animation: shuffle-1 0.5s infinite alternate; }
+.deck.shuffling .card-placeholder:nth-child(2) { animation: shuffle-2 0.5s infinite alternate-reverse; }
+.deck.shuffling .card-placeholder:nth-child(3) { animation: shuffle-3 0.5s infinite; }
+
+@keyframes shuffle-1 {
+  from { transform: translate(-10px, -5px) rotate(-10deg); }
+  to   { transform: translate(10px, 5px) rotate(10deg); }
+}
+@keyframes shuffle-2 {
+  from { transform: translate(5px, 5px) rotate(8deg); }
+  to   { transform: translate(-5px, -5px) rotate(-8deg); }
+}
+@keyframes shuffle-3 {
+  from { transform: translate(-8px, 2px) rotate(-5deg); }
+  to   { transform: translate(8px, -2px) rotate(5deg); }
+}
+
+
+/* Popup Modal */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Animasi fade-in untuk overlay */
+  animation: fadeIn 0.3s;
+}
+
+.popup-content {
+  background-color: white;
+  padding: 30px 40px;
+  border-radius: 15px;
+  text-align: center;
+  position: relative;
+  width: 90%;
+  max-width: 450px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+  /* Animasi scale-up untuk popup */
+  animation: scaleUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.close-popup {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 28px;
+  font-weight: 700;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #aaa;
+  line-height: 1;
+}
+.close-popup:hover {
+  color: var(--dark-text);
+}
+
+.drawn-card-text {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--primary-red);
+  min-height: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  line-height: 1.5;
+}
+
+/* Keyframes untuk animasi popup */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleUp {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* --- Tambahan untuk Impor Excel --- */
+.import-section {
+  margin-top: 25px;
+  margin-bottom: 15px;
+  background-color: #fcfcfc;
+  border: 2px dashed var(--primary-orange);
+  border-radius: 10px;
+  padding: 15px;
+  text-align: left;
+}
+
+.import-section label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 10px;
+  color: var(--primary-red);
+}
+
+.import-section input[type="file"] {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+/* Style untuk file input button */
+.import-section input[type="file"]::file-selector-button {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background-color: var(--primary-red);
+  color: white;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background-color 0.2s;
+}
+
+.import-section input[type="file"]::file-selector-button:hover {
+  background-color: #b33642; /* Warna merah lebih gelap */
+}
+
+.atau {
+  font-size: 0.9rem;
+  color: #777;
+  font-weight: 700;
+  margin-top: 20px;
 }
